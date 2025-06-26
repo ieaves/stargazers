@@ -17,11 +17,10 @@
 package cmd
 
 import (
-	"errors"
 	"log"
 
-	"github.com/magmueller/stargazers/analyze"
-	"github.com/magmueller/stargazers/fetch"
+	"stargazers/analyze"
+	"stargazers/fetch"
 	"github.com/spf13/cobra"
 )
 
@@ -52,10 +51,18 @@ func init() {
 // RunAnalyze fetches saved stargazer info for the specified repo and
 // runs the analysis reports.
 func RunAnalyze(cmd *cobra.Command, args []string) error {
+	// Load configuration
+	cfg, err := LoadConfig()
+	if err != nil {
+		return err
+	}
+
 	repo, err := cmd.Flags().GetString("repo")
 	if err != nil || len(repo) == 0 {
-		return errors.New("repository not specified; use --repo=:owner/:repo")
+		// Use config repo if not specified
+		repo = cfg.GetRepositoryPath()
 	}
+
 	log.Printf("fetching saved GitHub stargazer data for repository %s", repo)
 	fetchCtx := &fetch.Context{
 		Repo:     repo,

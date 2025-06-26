@@ -29,8 +29,21 @@ import (
 const AccessTokenDesc = "GitHub access token for authorized rate limits"
 
 func getAccessToken() (string, error) {
-	if len(AccessToken) == 0 {
-		return "", errors.New(`An access token must be specified via --token.
+	// First check if token is provided via command line
+	if len(AccessToken) > 0 {
+		return AccessToken, nil
+	}
+	
+	// Try to load from config (which includes environment variables)
+	cfg, err := LoadConfig()
+	if err == nil {
+		if token := cfg.GetToken(); token != "" {
+			return token, nil
+		}
+	}
+	
+	// No token found, return error
+	return "", errors.New(`An access token must be specified via --token, config.yaml, or GH_TOKEN environment variable.
 
 To generate an access token for accessing repo stars and gaining authorized
 rate limits, see:
@@ -38,9 +51,13 @@ rate limits, see:
 https://help.github.com/articles/creating-an-access-token-for-command-line-use/
 
 When creating a token, ensure that only the public_repo permission is enabled.
+
+You can provide the token in several ways:
+1. Command line: --token=YOUR_TOKEN
+2. Config file: Add 'token: "YOUR_TOKEN"' to the github section in config.yaml
+3. Environment variable: Set GH_TOKEN=YOUR_TOKEN
+4. .env file: Create a .env file with GH_TOKEN=YOUR_TOKEN
 `)
-	}
-	return AccessToken, nil
 }
 
 

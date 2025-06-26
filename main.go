@@ -23,9 +23,8 @@ import (
 	"reflect"
 	"strings"
 
-	// NOTE: change magmueller to your username
-	"github.com/magmueller/stargazers/cmd" // fork repo and use local
-	// fork repo and use local
+	"stargazers/config"
+	"stargazers/cmd"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
@@ -76,6 +75,17 @@ Basic starting point:
 }
 
 func runStargazers(c *cobra.Command, args []string) error {
+	// Load configuration
+	cfg, err := config.Load()
+	if err != nil {
+		return fmt.Errorf("failed to load configuration: %w", err)
+	}
+
+	// Set default repo from config if not provided
+	if cmd.Repo == "" {
+		cmd.Repo = cfg.GetRepositoryPath()
+	}
+
 	if err := cmd.RunFetch(cmd.FetchCmd, args); err != nil {
 		return err
 	}

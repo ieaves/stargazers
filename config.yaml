@@ -1,0 +1,8 @@
+# Stargazers Configuration
+# Update these values with your repository and GitHub username
+
+repository: # The repository you want to analyze
+
+github:
+  username: # Your GitHub username (for module path)
+  # token:  # this is optional, if not provided here use GH_TOKEN environment variable or --token command line argument

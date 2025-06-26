@@ -17,10 +17,9 @@
 package cmd
 
 import (
-	"errors"
 	"log"
 
-	"github.com/magmueller/stargazers/fetch"
+	"stargazers/fetch"
 	"github.com/spf13/cobra"
 )
 
@@ -38,9 +37,17 @@ Clears all GitHub API responses which have been cached in the repo-specific
 
 // RunClear clears all cached GitHub API responses for the specified repo.
 func RunClear(cmd *cobra.Command, args []string) error {
-	if len(Repo) == 0 {
-		return errors.New("repository not specified; use --repo=:owner/:repo")
+	// Load configuration
+	cfg, err := LoadConfig()
+	if err != nil {
+		return err
 	}
+
+	// Use config repo if not specified
+	if len(Repo) == 0 {
+		Repo = cfg.GetRepositoryPath()
+	}
+
 	log.Printf("clearing GitHub API response cache for repository %s", Repo)
 	fetchCtx := &fetch.Context{
 		Repo:     Repo,

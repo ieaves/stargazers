@@ -19,11 +19,10 @@ package cmd
 // ExtendedContext
 
 import (
-	"errors"
 	"fmt"
 	"log"
 
-	"github.com/magmueller/stargazers/fetch"
+	"stargazers/fetch"
 	"github.com/spf13/cobra"
 )
 
@@ -78,9 +77,17 @@ fetched data is cached by URL.
 // RunFetch recursively queries all relevant github data for
 // the specified owner and repo.
 func RunFetch(cmd *cobra.Command, args []string) error {
-	if len(Repo) == 0 {
-		return errors.New("repository not specified; use --repo=:owner/:repo")
+	// Load configuration
+	cfg, err := LoadConfig()
+	if err != nil {
+		return err
 	}
+
+	// Use config repo if not specified
+	if len(Repo) == 0 {
+		Repo = cfg.GetRepositoryPath()
+	}
+
 	token, err := getAccessToken()
 	if err != nil {
 		return err

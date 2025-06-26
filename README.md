@@ -17,36 +17,71 @@ Stargazer Analytics helps you understand and connect with the developers who sta
 ## 🚀 Quick Start
 
 ### 1. Setup
-In this repo search and replace `github.com/magmueller/stargazers` and `github.com/YOUR_USERNAME/stargazers` with your username.
 
 ```bash
 # Clone the repository
 git clone https://github.com/YOUR_USERNAME/stargazers.git
 cd stargazers
+```
 
+### 2. Configure Repository
 
+Edit the `config.yaml` file with your repository and GitHub username:
+
+```yaml
+# Stargazers Configuration
+repository: "https://github.com/meta-llama/llama-stack"  # The repository you want to analyze
+
+github:
+  username: "your-username"  # Your GitHub username (for module path)
+  # token: "your-token"     # Optional: GitHub token (can also use GH_TOKEN environment variable)
+```
+
+### 3. Configure GitHub Token
+
+You can provide your GitHub token in several ways (in order of preference):
+
+#### Option A: Environment Variable (Recommended)
+```bash
+export GH_TOKEN=your_github_token_here
+```
+
+#### Option B: .env File
+Create a `.env` file in the project root:
+```bash
+# .env
+GH_TOKEN=your_github_token_here
+```
+
+#### Option C: Config File
+Add the token to your `config.yaml`:
+```yaml
+github:
+  username: "your-username"
+  token: "your_github_token_here"
+```
+
+#### Option D: Command Line
+```bash
+./stargazers fetch --token=YOUR_TOKEN --mode=basic
+```
+
+### 4. Initialize Go Module
+
+```bash
 # Initialize Go module
-rm -rf go.mod go.sum
-go mod init github.com/YOUR_USERNAME/stargazers && go mod tidy
+go mod tidy
 go build
 ```
 
-
-
-### 2. Configure GitHub Token
-1. Visit GitHub.com → Settings → Developer Settings → Personal Access Tokens
-2. Generate new token (classic)
-3. Select scopes: `public_repo`, `read:user`
-4. Copy your token
-
-### 3. Choose Analysis Mode
+### 5. Choose Analysis Mode
 
 You can run the tool in two modes:
 
 #### Basic Mode -Information about your stargazers (Email Collection) 
 ```bash
 # Only collect stargazer profiles and emails
-./stargazers fetch --repo=OWNER/REPO --token=YOUR_TOKEN --mode=basic
+./stargazers fetch --mode=basic
 ```
 - **Basic Mode** (--mode=basic):
   - Collects only stargazer profiles and emails
@@ -58,7 +93,7 @@ You can run the tool in two modes:
 #### Full Analysis Mode - Repository Correlation
 ```bash
 # Full analysis including starred repos and contributions
-./stargazers fetch --repo=OWNER/REPO --token=YOUR_TOKEN --mode=full
+./stargazers fetch --mode=full
 ```
 
 The modes automatically set the appropriate parameters:
@@ -77,26 +112,26 @@ The modes automatically set the appropriate parameters:
 
 ```bash
 Options:
-  -r, --repo string        GitHub repository (format: owner/repo)
-  -t, --token string       GitHub access token
+  -r, --repo string        GitHub repository (format: owner/repo) - optional if configured in config.yaml
+  -t, --token string       GitHub access token - optional if set in config.yaml or GH_TOKEN environment variable
   -c, --cache string       Cache directory (default: "./stargazer_cache")
   -m, --mode string        Analysis mode (default: "basic")
       --verbosity          Log level for verbose output
       --no-color          Disable colored output
 ```
 
-### 5. Changing the code
-If you change Go code, you need to recompile the program to make the changes effective. To do this do the initialization from above again:
+### 6. Changing the code
+If you change Go code, you need to recompile the program to make the changes effective. To this do the initialization from above again:
 ```bash
 go build
 ```
 
-### 6. Analysis Tools
+### 7. Analysis Tools
 
 Run this to get csv from your cached profiles:
 ```bash
-./stargazers analyze --repo=OWNER/REPO
-````
+./stargazers analyze
+```
 
 Then you find the csvs in `./stargazer_cache/OWNER_REPO/`.
 
@@ -106,7 +141,7 @@ I drafted some scripts to analyze the data - but depending on your use case I ad
 - **Data cleaning**: In  `emails/OWNER_REPO_emails.csv` are all your stargazers. Around 20% should have emails. Filter them our.
 - **Email Generation**: AI-powered personalized intro generator in [`/emails`](emails). Rank your leads by the score. I also recommend to filter by region (just add to the system prompt).
 
-### 7. Email Sending Recommendations
+### 8. Email Sending Recommendations
 
 For sending emails, I used Instantly. Do not send more than 30 emails per email address per day to avoid being flagged as spam.
 1 email address cost there around 5 USD per month + 15 USD per year for the domain + 90 USD per month for the tool.
