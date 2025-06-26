@@ -32,3 +32,20 @@ func LoadConfig() (*config.Config, error) {
 
 	return cfg, nil
 }
+
+func LoadConfigOrNil() *config.Config {
+	cfg, err := config.Load()
+	if err != nil {
+		return nil
+	}
+
+	if Repo == "" {
+		Repo = cfg.GetRepositoryPath()
+	}
+
+	if AccessToken == "" {
+		AccessToken = cfg.GetToken()
+	}
+
+	return cfg
+}

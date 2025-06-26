@@ -16,42 +16,43 @@
 
 package cmd
 
-// ExtendedContext
-
 import (
 	"fmt"
 	"log"
 
+	"stargazers/config"
 	"stargazers/fetch"
+
 	"github.com/spf13/cobra"
 )
 
-// ExtendedContext wraps the original Context and adds mode support
+// ExtendedContext
+
 type ExtendedContext struct {
-    fetch.Context  // Embed the original Context
-    Mode string // Add mode field
+	fetch.Context
+	Mode string
 }
 
 // NewContext creates a new ExtendedContext with the specified parameters
-func NewContext(repo, token, cacheDir, mode string) *ExtendedContext {
-    return &ExtendedContext{
-        Context: fetch.Context{
-            Repo:     repo,
-            Token:    token,
-            CacheDir: cacheDir,
-        },
-        Mode: mode,
-    }
+func NewContext(cfg *config.AppConfig) *ExtendedContext {
+	return &ExtendedContext{
+		Context: fetch.Context{
+			Repo:     cfg.Repo,
+			Token:    cfg.Token,
+			CacheDir: cfg.CacheDir,
+		},
+		Mode: cfg.Mode,
+	}
 }
 
 // GetBaseContext returns the base Context for fetch operations
 func (c *ExtendedContext) GetBaseContext() *fetch.Context {
-    return &fetch.Context{
-        Repo:     c.Repo,
-        Token:    c.Token,
-        CacheDir: c.CacheDir,
-        Mode:     c.Mode,
-    }
+	return &fetch.Context{
+		Repo:     c.Repo,
+		Token:    c.Token,
+		CacheDir: c.CacheDir,
+		Mode:     c.Mode,
+	}
 }
 
 // FetchCmd recursively fetches stargazer github data.
@@ -67,36 +68,26 @@ contributions in terms of additions, deletions, and commits. All
 fetched data is cached by URL.
 `,
 	Example: `  stargazers fetch --repo=cockroachdb/cockroach --token=f87456b1112dadb2d831a5792bf2ca9a6afca7bc`,
-	RunE:    RunFetch,
 }
 
+func SetupFetchCommand(cliRepo, cliToken, cliCacheDir, cliMode, cliUsername *string) {
+	FetchCmd.RunE = func(cmd *cobra.Command, args []string) error {
+		return RunFetchApp(*cliRepo, *cliToken, *cliCacheDir, *cliMode, *cliUsername)
+	}
+}
 
-// RunFetch recursively queries all relevant github data for
+// RunFetchApp recursively queries all relevant github data for
 // the specified owner and repo.
-
-// RunFetch recursively queries all relevant github data for
-// the specified owner and repo.
-func RunFetch(cmd *cobra.Command, args []string) error {
-	// Load configuration
-	cfg, err := LoadConfig()
+func RunFetchApp(cliRepo, cliToken, cliCacheDir, cliMode, cliUsername string) error {
+	cfg, err := config.LoadAppConfig(cliRepo, cliToken, cliCacheDir, cliMode, cliUsername)
 	if err != nil {
 		return err
 	}
-
-	// Use config repo if not specified
-	if len(Repo) == 0 {
-		Repo = cfg.GetRepositoryPath()
-	}
-
-	token, err := getAccessToken()
-	if err != nil {
-		return err
-	}
-	log.Printf("fetching GitHub data for repository %s", Repo)
-	ctx := NewContext(Repo, token, CacheDir, Mode)
+	ctx := NewContext(cfg)
 	if err := validateMode(ctx); err != nil {
 		return err
 	}
+	log.Printf("fetching GitHub data for repository %s", cfg.Repo)
 	if err := fetch.QueryAll(ctx.GetBaseContext()); err != nil {
 		log.Printf("failed to query stargazer data: %s", err)
 		return nil

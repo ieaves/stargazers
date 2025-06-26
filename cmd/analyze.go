@@ -17,6 +17,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 
 	"stargazers/analyze"
@@ -51,15 +52,13 @@ func init() {
 // RunAnalyze fetches saved stargazer info for the specified repo and
 // runs the analysis reports.
 func RunAnalyze(cmd *cobra.Command, args []string) error {
-	// Load configuration
-	cfg, err := LoadConfig()
-	if err != nil {
-		return err
-	}
+	cfg := LoadConfigOrNil()
 
 	repo, err := cmd.Flags().GetString("repo")
 	if err != nil || len(repo) == 0 {
-		// Use config repo if not specified
+		if cfg == nil {
+			return fmt.Errorf("repository not specified; use --repo=:owner/:repo or create a valid config.yaml")
+		}
 		repo = cfg.GetRepositoryPath()
 	}
 

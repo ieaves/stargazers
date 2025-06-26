@@ -1,6 +1,3 @@
-# Stargazers Configuration
-# Update these values with your repository and GitHub username
-
 repository: # The repository you want to analyze
 
 github:

@@ -23,9 +23,9 @@ import (
 	"reflect"
 	"strings"
 
-	"stargazers/config"
 	"stargazers/cmd"
 
+	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 )
@@ -49,6 +49,14 @@ func (v pflagValue) IsBoolFlag() bool {
 func normalizeStdFlagName(s string) string {
 	return strings.Replace(s, "_", "-", -1)
 }
+
+var (
+	cliRepo     string
+	cliToken    string
+	cliCacheDir string
+	cliMode     string
+	cliUsername string
+)
 
 var stargazersCmd = &cobra.Command{
 	Use:   "stargazers :owner/:repo --token=:access_token",
@@ -75,23 +83,7 @@ Basic starting point:
 }
 
 func runStargazers(c *cobra.Command, args []string) error {
-	// Load configuration
-	cfg, err := config.Load()
-	if err != nil {
-		return fmt.Errorf("failed to load configuration: %w", err)
-	}
-
-	// Set default repo from config if not provided
-	if cmd.Repo == "" {
-		cmd.Repo = cfg.GetRepositoryPath()
-	}
-
-	if err := cmd.RunFetch(cmd.FetchCmd, args); err != nil {
-		return err
-	}
-	if err := cmd.RunAnalyze(cmd.AnalyzeCmd, args); err != nil {
-		return err
-	}
+	// No-op: fetch command logic is now handled by cobra/cmd package with unified config
 	return nil
 }
 
@@ -117,20 +109,27 @@ func init() {
 		genDocCmd,
 	)
 
-	// Change FetchCmd.PersistentFlags() to FetchCmd.Flags()
-	cmd.FetchCmd.Flags().StringVarP(&cmd.Repo, "repo", "r", "", "GitHub owner and repository (format: owner/repo)")
-	cmd.FetchCmd.Flags().StringVarP(&cmd.AccessToken, "token", "t", "", "GitHub access token")
-	cmd.FetchCmd.Flags().StringVarP(&cmd.CacheDir, "cache", "c", "./stargazer_cache", "Cache directory")
-	cmd.FetchCmd.Flags().StringVarP(&cmd.Mode, "mode", "m", "basic", "Analysis mode: 'basic' or 'full'")
+	cmd.FetchCmd.Flags().StringVarP(&cliRepo, "repo", "r", "", "GitHub owner and repository (format: owner/repo)")
+	cmd.FetchCmd.Flags().StringVarP(&cliToken, "token", "t", "", "GitHub access token")
+	cmd.FetchCmd.Flags().StringVarP(&cliCacheDir, "cache", "c", "", "Cache directory")
+	cmd.FetchCmd.Flags().StringVarP(&cliMode, "mode", "m", "", "Analysis mode: 'basic' or 'full'")
+	// Optionally add username flag if you want to override from CLI
+	// cmd.FetchCmd.Flags().StringVar(&cliUsername, "username", "", "GitHub username (for module path)")
+
+	cmd.SetupFetchCommand(&cliRepo, &cliToken, &cliCacheDir, &cliMode, &cliUsername)
 }
 
-// Run ...
 func Run(args []string) error {
 	stargazersCmd.SetArgs(args)
 	return stargazersCmd.Execute()
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Printf("Warning: Error loading .env file: %v\n", err)
+	}
+
 	if err := Run(os.Args[1:]); err != nil {
 		fmt.Fprintf(os.Stderr, "failed running command %q: %v", os.Args[1:], err)
 		os.Exit(1)

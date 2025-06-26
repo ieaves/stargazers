@@ -33,15 +33,15 @@ func getAccessToken() (string, error) {
 	if len(AccessToken) > 0 {
 		return AccessToken, nil
 	}
-	
+
 	// Try to load from config (which includes environment variables)
-	cfg, err := LoadConfig()
-	if err == nil {
+	cfg := LoadConfigOrNil()
+	if cfg != nil {
 		if token := cfg.GetToken(); token != "" {
 			return token, nil
 		}
 	}
-	
+
 	// No token found, return error
 	return "", errors.New(`An access token must be specified via --token, config.yaml, or GH_TOKEN environment variable.
 
@@ -60,10 +60,8 @@ You can provide the token in several ways:
 `)
 }
 
-
 // CacheDirDesc describes usage.
 const CacheDirDesc = "directory for storing cached GitHub API responses"
-
 
 // RepoDesc describes usage.
 const RepoDesc = "GitHub owner and repository, formatted as :owner/:repo"

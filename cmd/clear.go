@@ -17,6 +17,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 
 	"stargazers/fetch"
@@ -37,14 +38,12 @@ Clears all GitHub API responses which have been cached in the repo-specific
 
 // RunClear clears all cached GitHub API responses for the specified repo.
 func RunClear(cmd *cobra.Command, args []string) error {
-	// Load configuration
-	cfg, err := LoadConfig()
-	if err != nil {
-		return err
-	}
+	cfg := LoadConfigOrNil()
 
-	// Use config repo if not specified
 	if len(Repo) == 0 {
+		if cfg == nil {
+			return fmt.Errorf("repository not specified; use --repo=:owner/:repo or create a valid config.yaml")
+		}
 		Repo = cfg.GetRepositoryPath()
 	}
 
