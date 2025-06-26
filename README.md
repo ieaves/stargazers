@@ -39,9 +39,15 @@ github:
 
 ### 3. Configure GitHub Token
 
-You can provide your GitHub token in several ways (in order of preference):
+1. Visit GitHub.com → Settings → Developer Settings → Personal Access Tokens
+2. Generate new token (classic)
+3. Select scopes: `public_repo`, `read:user`
+4. Copy your token
+  
+  
+You can provide your GitHub token in several ways:
 
-#### Option A: Environment Variable (Recommended)
+#### Option A: Environment Variable
 ```bash
 export GH_TOKEN=your_github_token_here
 ```
