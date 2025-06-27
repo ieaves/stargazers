@@ -21,7 +21,9 @@ import (
 	"log"
 
 	"stargazers/analyze"
+	"stargazers/config"
 	"stargazers/fetch"
+
 	"github.com/spf13/cobra"
 )
 
@@ -52,27 +54,29 @@ func init() {
 // RunAnalyze fetches saved stargazer info for the specified repo and
 // runs the analysis reports.
 func RunAnalyze(cmd *cobra.Command, args []string) error {
-	cfg := LoadConfigOrNil()
-
+	// Get CLI flags
 	repo, err := cmd.Flags().GetString("repo")
-	if err != nil || len(repo) == 0 {
-		if cfg == nil {
-			return fmt.Errorf("repository not specified; use --repo=:owner/:repo or create a valid config.yaml")
-		}
-		repo = cfg.GetRepositoryPath()
+	if err != nil {
+		return err
 	}
 
-	log.Printf("fetching saved GitHub stargazer data for repository %s", repo)
+	// Load configuration using the same system as fetch command
+	cfg, err := config.LoadAppConfig(repo, "", "", "", "")
+	if err != nil {
+		return fmt.Errorf("failed to load configuration: %w", err)
+	}
+
+	log.Printf("fetching saved GitHub stargazer data for repository %s", cfg.Repo)
 	fetchCtx := &fetch.Context{
-		Repo:     repo,
-		CacheDir: CacheDir,
+		Repo:     cfg.Repo,
+		CacheDir: cfg.CacheDir,
 	}
 	sg, rs, err := fetch.LoadState(fetchCtx)
 	if err != nil {
 		log.Printf("failed to load saved stargazer data: %s", err)
 		return nil
 	}
-	log.Printf("analyzing GitHub data for repository %s", repo)
+	log.Printf("analyzing GitHub data for repository %s", cfg.Repo)
 	if err := analyze.RunAll(fetchCtx, sg, rs); err != nil {
 		log.Printf("failed to query stargazer data: %s", err)
 		return nil
